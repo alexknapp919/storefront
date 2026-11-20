@@ -1,0 +1,10 @@
+mutation BuyAgain($id: ID!, $lines: [CheckoutLineInput!]!) {
+	checkoutLinesAdd(id: $id, lines: $lines) {
+		checkout {
+			id
+		}
+		errors {
+			code
+		}
+	}
+}

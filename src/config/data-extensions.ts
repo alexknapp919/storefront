@@ -36,5 +36,5 @@ export const dataExtensions: {
 } = {
 	profiles: {},
 	webhookScopes: {},
-	operations: {},
+	operations: { BuyAgain: { access: "mutate", auth: "session" } },
 };

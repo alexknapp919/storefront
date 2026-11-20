@@ -34,6 +34,7 @@ Rows are keyed by file and enclosing function, not line, so formatting does not 
 | mutate           | AccountAddressUpdateDocument            | —                                             | src/app/(storefront)/[locale]/[channel]/(main)/account/actions.ts › updateAddress             |
 | mutate           | AccountUpdateDocument                   | —                                             | src/app/(storefront)/[locale]/[channel]/(main)/account/actions.ts › updateProfile             |
 | mutate           | CheckoutAddLineDocument                 | —                                             | src/app/actions.ts › addVariantToCart                                                         |
+| mutate           | BuyAgainDocument                        | —                                             | src/app/actions.ts › buyAgain                                                                 |
 | mutate           | CheckoutDeleteLinesDocument             | —                                             | src/app/actions.ts › deleteCartLine                                                           |
 | mutate           | CheckoutLinesUpdateDocument             | —                                             | src/app/actions.ts › updateCartLineQuantity                                                   |
 | rawMutation      | —                                       | —                                             | src/app/api/auth/register/route.ts › POST                                                     |

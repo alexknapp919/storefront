@@ -1,10 +1,12 @@
 "use server";
 
+import { getCurrentUserOrders } from "@/lib/account/get-orders";
 import { cookies } from "next/headers";
 import { refresh } from "next/cache";
 import { signOutSession } from "@/lib/auth/bff-server";
 import { mutate } from "@/lib/saleor";
 import {
+	BuyAgainDocument,
 	CheckoutAddLineDocument,
 	CheckoutDeleteLinesDocument,
 	CheckoutLinesUpdateDocument,
@@ -143,4 +145,67 @@ export async function addVariantToCart(input: {
 	});
 
 	refresh();
+}
+
+export async function buyAgain(
+	orderId: string,
+	channel: string,
+	locale: string,
+	after: string | undefined,
+	quantities: Record<string, number> | null,
+) {
+	const outcome = { added: 0, skipped: [] as string[], failed: false };
+	const orders = await getCurrentUserOrders(locale, 10, after);
+	const order = orders.ok && orders.data.me?.orders?.edges.find(({ node }) => node.id === orderId)?.node;
+	if (!order) return { ...outcome, failed: true };
+	const lines = order.lines.flatMap((line) => {
+		const requested = quantities === null ? line.quantity : quantities[line.id];
+		if (!requested || !Number.isSafeInteger(requested) || requested < 1) return [];
+		const available = order.channel.slug === channel ? line.variant?.quantityAvailable : null;
+		const quantity = Math.min(requested, available ?? requested);
+		if (!line.variant || line.isGift || quantity < 1) {
+			outcome.skipped.push(line.productName);
+			return [];
+		}
+		if (quantity < requested) outcome.skipped.push(`${line.productName} × ${requested - quantity}`);
+		return [{ variantId: line.variant.id, quantity, name: line.productName }];
+	});
+	if (!lines.length) return outcome;
+	const checkout = await Checkout.findOrCreate({
+		checkoutId: await Checkout.getIdFromCookies(channel),
+		channel,
+		localeSlug: locale,
+	});
+	if (!checkout) return { ...outcome, failed: true };
+	await Checkout.saveIdToCookie(channel, checkout.id);
+	// A rejected variant must not roll back the other available items in this order.
+	for (const { variantId, quantity, name } of lines) {
+		const result = await mutate(BuyAgainDocument, {
+			variables: { id: checkout.id, lines: [{ variantId, quantity }] },
+		});
+		const payload = result.ok && result.data.checkoutLinesAdd;
+		if (
+			payload &&
+			payload.errors.length &&
+			payload.errors.every(({ code }) =>
+				[
+					"INSUFFICIENT_STOCK",
+					"NOT_FOUND",
+					"PRODUCT_NOT_PUBLISHED",
+					"PRODUCT_UNAVAILABLE_FOR_PURCHASE",
+					"QUANTITY_GREATER_THAN_LIMIT",
+					"UNAVAILABLE_VARIANT_IN_CHANNEL",
+				].some((reason) => reason === code),
+			)
+		) {
+			outcome.skipped.push(name);
+		} else if (!payload || !payload.checkout || payload.errors.length) {
+			outcome.failed = true;
+			break;
+		} else {
+			outcome.added += quantity;
+		}
+	}
+	refresh();
+	return outcome;
 }
