@@ -1,3 +1,5 @@
+import { BuyAgainOptions } from "@/ui/components/account/buy-again-button";
+import { pickTranslatedName } from "@/lib/saleor-translations";
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import { getCurrentUserOrders } from "@/lib/account/get-orders";
@@ -12,7 +14,7 @@ import { AccountOrdersListSkeleton } from "@/ui/components/account/account-skele
 const ORDERS_PER_PAGE = 10;
 
 type Props = {
-	params: Promise<{ locale: string }>;
+	params: Promise<{ locale: string; channel: string }>;
 	searchParams: Promise<{ after?: string }>;
 };
 
@@ -25,7 +27,7 @@ export default function AccountOrdersPage({ params, searchParams }: Props) {
 }
 
 async function AccountOrdersContent({ params, searchParams }: Props) {
-	const [{ locale }, { after }] = await Promise.all([params, searchParams]);
+	const [{ locale, channel }, { after }] = await Promise.all([params, searchParams]);
 	const t = await getTranslations({ locale, namespace: "account.orders" });
 	const tErrors = await getTranslations({ locale, namespace: "account.errors" });
 	const tOrder = await getTranslations({ locale, namespace: "account" });
@@ -65,12 +67,31 @@ async function AccountOrdersContent({ params, searchParams }: Props) {
 				<>
 					<div className="space-y-2">
 						{orders.map(({ node: order }) => (
-							<OrderRow
-								key={order.id}
-								order={order}
-								localeSlug={locale}
-								labels={buildOrderRowLabels(tOrder, tStatus, order)}
-							/>
+							<div key={order.id} className="overflow-hidden rounded-xl border">
+								<OrderRow
+									order={order}
+									localeSlug={locale}
+									labels={buildOrderRowLabels(tOrder, tStatus, order)}
+								/>
+								<BuyAgainOptions
+									orderId={order.id}
+									locale={locale}
+									channel={channel}
+									after={after}
+									items={order.lines.map((line) => ({
+										id: line.id,
+										name: line.variant ? pickTranslatedName(line.variant.product) : line.productName,
+										variant: line.variant ? pickTranslatedName(line.variant) : line.variantName,
+										quantity: line.quantity,
+										available:
+											!!line.variant &&
+											!line.isGift &&
+											(order.channel.slug !== channel || line.variant.quantityAvailable !== 0),
+										gift: !!line.isGift,
+										image: line.variant?.product.thumbnail?.url,
+									}))}
+								/>
+							</div>
 						))}
 					</div>
 

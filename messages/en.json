@@ -397,6 +397,31 @@
 		"unavailable": {
 			"title": "Unable to load your account",
 			"body": "The store is temporarily unavailable. Refresh the page or try again in a moment."
+		},
+		"buyAgain": {
+			"group": "Buy again options",
+			"quick": "Quick repeat",
+			"pick": "Pick items",
+			"edit": "Edit quantities",
+			"quickHint": "Add the available items from this order in their original quantities.",
+			"pickHint": "Choose which items to add. Each keeps its original quantity.",
+			"editHint": "Set the quantities for this shop. Use zero to leave an item out.",
+			"priceNote": "Current prices apply. Nothing is purchased until checkout.",
+			"quickAction": "Buy again",
+			"pickAction": "Add selected items",
+			"editAction": "Add to cart",
+			"busy": "Adding…",
+			"units": "{count, plural, one {# item} other {# items}}",
+			"previous": "Previously: {count}",
+			"quantity": "Quantity for {name}",
+			"unavailable": "Unavailable",
+			"gift": "Promotional gift",
+			"success": "Added {count, plural, one {# item} other {# items}} to your cart.",
+			"none": "No items were added.",
+			"skipped": "Skipped: {names}.",
+			"error": "Couldn’t confirm the full update. Check your cart before retrying.",
+			"cart": "View cart",
+			"soldOut": "None of the items from this order are currently available."
 		}
 	},
 	"checkout": {

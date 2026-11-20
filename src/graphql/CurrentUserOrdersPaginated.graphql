@@ -5,6 +5,18 @@ query CurrentUserOrdersPaginated($first: Int, $after: String, $languageCode: Lan
 			edges {
 				node {
 					...OrderDetails
+					channel {
+						slug
+					}
+					lines {
+						id
+						productName
+						variantName
+						isGift
+						variant {
+							quantityAvailable
+						}
+					}
 				}
 				cursor
 			}
